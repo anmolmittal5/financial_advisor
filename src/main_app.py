@@ -5,6 +5,9 @@ import os
 import sys
 
 import torch
+import tensorflow
+
+from notebooks.asset_allocation import pred_allocations, get_percentage_allocations, allocations_personal_info
 
 sys.path.insert(0, os.getcwd())
 from ctransformers import AutoModelForCausalLM, AutoConfig
@@ -155,3 +158,16 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
+def get_asset_allocations(n, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
+    input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
+        [ 0.58636271, -0.39537122,  0.42780971, -0.46944507],
+        [-0.1100707 , -0.64677616,  0.57999954, -0.49210003],
+        [-0.63707234,  2.43698303, -2.44224021,  2.44542922],
+        [-0.99474293, -0.35575759,  0.38393767, -0.42008887],
+        [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
+        [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
+    
+    final_dict = allocations_personal_info(input_sequence, n, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation)
+
+    return final_dict
