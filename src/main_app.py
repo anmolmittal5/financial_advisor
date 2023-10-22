@@ -1,45 +1,44 @@
-import pandas as pd
-import numpy as np
 import streamlit as st
 import os
 import sys
-
 import torch
 import tensorflow
-
-from notebooks.asset_allocation import pred_allocations, get_percentage_allocations, allocations_personal_info
-
 sys.path.insert(0, os.getcwd())
 from ctransformers import AutoModelForCausalLM, AutoConfig
 import transformers
+from llama_cpp import Llama
 from app_assist import get_model_details, latest_search_results
+from notebooks.asset_allocation import pred_allocations, get_percentage_allocations, allocations_personal_info
+from src.prompts import get_input_category_prompt, get_news_summary_prompt
 
 # App title
 st.set_page_config(page_title="📈💲💬 AI Financial Chatbot")
 
 @st.cache_resource()
-def ChatModel(temperature, top_p):
+def ChatModel(temperature):
     params = get_model_details(model="llama_2_7b_chat_quantized")
-    config = AutoConfig.from_pretrained(params['model_config'])
-    config.max_seq_len = 4096
-    config.max_answer_len = 2000
+    # config = AutoConfig.from_pretrained(params['model_config'])
+    # config.max_seq_len = 4096
+    # config.max_answer_len = 2000
     return AutoModelForCausalLM.from_pretrained(
 
         params['model_path'],
         model_type=params['model_type'],
-        temperature=temperature,
-        top_p=top_p)
+        temperature=temperature
+    )
 
-# @st.cache_resource()
-# def LlamaChatModel(temperature, top_p):
-#     params = get_model_details(model="llama_2_7b_chat")
-#     tokenizer = transformers.AutoTokenizer.from_pretrained(params['model_id'], use_auth_tokens=params['auth_token'])
-#     bnb_config = transformers.BitsAndBytesConfig(
-#         load_in_4bit=True,
-#         bnb_4bit_quant_type='nf4',
-#         bnb_4bit_use_double_quant=True,
-#         bnb_4bit_compute_dtype=torch.float16
-#     )
+@st.cache_resource()
+def LlamaChatModel(temperature):
+    params = get_model_details(model="llama_2_7b_chat")
+    tokenizer = transformers.AutoTokenizer.from_pretrained(params['model_id'], use_auth_tokens=params['auth_token'])
+    bnb_config = transformers.BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type='nf4',
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=torch.float16
+    )
+    llm = Llama(model_path="models/llama-2-7b-chat.ggmlv3.q8.0.bin", n_ctx=4000, n_batch=1000)
+    return llm
 #     model = transformers.AutoModelForCausalLM.from_pretrained(
 #         params['model_id'],
 #         trust_remote_code=True,
@@ -63,11 +62,22 @@ def ChatModel(temperature, top_p):
 with st.sidebar:
     st.title('📈💲💬 AI Financial Chatbot')
     st.subheader('Models and parameters')
+    model_type = st.sidebar.selectbox('Model Name', ('4bit Quantized Llama', '8bit Quantized Llama', 'Finance-Llama'))
+    temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=1.0, value=0.1, step=0.01)
+    # top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
+    chat_model = ChatModel(temperature)
+    llama_chat_model = LlamaChatModel(temperature)
 
-    temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=2.0, value=0.1, step=0.01)
-    top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
-    chat_model = ChatModel(temperature, top_p)
-    # llama_chat_model = LlamaChatModel(temperature, top_p)
+    user_age = st.sidebar.slider('Age', min_value=18, max_value=100, value=25, step=1)
+    user_family_situation = st.sidebar.selectbox('Family Situation', ('Single with no children', 'Married with young children'))
+    user_risk_tolerance = st.sidebar.selectbox('Risk Tolerance', ('High', 'Low'))
+    user_investment_goals = st.sidebar.selectbox('Investment Goals', ('Short-term', 'Long-term'))
+    user_income = st.sidebar.selectbox('Income', ('High', 'Low'))
+    if user_income == 'Low':
+        user_expenses = st.sidebar.selectbox('Expenses', ('High'))
+    else:
+        user_expenses = st.sidebar.selectbox('Expenses', ('Low'))
+
 
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
@@ -97,13 +107,7 @@ def generate_llama2_response(prompt_input):
 
 def get_input_category(prompt):
     print(prompt)
-    instruction = f"""[INST] <<SYS>>
-{{You will be provided with customer service queries. The customer service query will be delimited with #### characters.
-Classify each query into a category.
-Provide just the category as your final output.
-Categories: Individual Stock Performance, Asset Allocation, Top Stocks, General Inquiry}}<<SYS>>
-###
-{{####{prompt}####}}[/INST]"""
+    instruction = get_input_category_prompt(prompt)
     output = chat_model(instruction)
     try:
         category = output.split(":")[1].split("\n")[0].strip()
@@ -113,13 +117,9 @@ Categories: Individual Stock Performance, Asset Allocation, Top Stocks, General 
     return category
 
 def get_news_summary(prompt, context):
-    instruction = f"""[INST] <<SYS>>
-{{You are provided with the Question delimited by triple backticks and Web Search Context delimited by ####.
-Answer the Question basis the Web Search Context. Try to structure the answer well and in bullet points.}}<<SYS>>
-###
-{{Question: ```{prompt}```
-Web Search Context: ####{context}####}}[/INST]"""
-    output = chat_model(instruction)
+    instruction = get_news_summary_prompt(prompt, context)
+    output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1, top_p=0.1)
+    # output = chat_model(instruction)
     print(output)
     return output
 

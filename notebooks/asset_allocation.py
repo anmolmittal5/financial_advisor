@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import pandas as pd
 import numpy as np
+import sys
+import os
+sys.path.insert(0, os.getcwd())
 import datetime
 import pickle
 from sklearn import preprocessing
@@ -9,10 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import regularizers
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.optimizers import Adam
+# # from tensorflow.keras import regularizers
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import LSTM, Dense
+# from tensorflow.keras.optimizers import Adam
 import matplotlib.pyplot as plt
 
 '''
@@ -94,19 +95,17 @@ input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
         [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
         [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
 
-with open('C:/Users/kaush/Documents/CDS/asset_allocation.bin', 'rb') as model_file:
-    model_data = pickle.load(model_file)
-
-model_data
+# with open('models/asset_allocation.bin', 'rb') as model_file:
+#     model_data = pickle.load(model_file)
 
 # 1. Load the model architecture (JSON) from the binary file
-with open('C:/Users/kaush/Documents/CDS/Financial Advisor/financial_advisor/models/asset_allocation.bin', 'rb') as model_file:
+with open('models/asset_allocation.bin', 'rb') as model_file:
     model_data = pickle.load(model_file)
     model_json = model_data['model_json']
 
 # 2. Load the weights from the HDF5 file
 loaded_model = tf.keras.models.model_from_json(model_json)
-loaded_model.load_weights('C:/Users/kaush/Documents/CDS/Financial Advisor/financial_advisor/models/asset_allocation_weights.h5')
+loaded_model.load_weights('models/asset_allocation_weights.h5')
 
 # Now you can use 'loaded_model' for predictions
 

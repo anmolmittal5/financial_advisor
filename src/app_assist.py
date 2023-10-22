@@ -18,3 +18,11 @@ def latest_search_results(instruction):
     print(context)
     return context
 
+def get_input_category_prompt(user_prompt):
+    prompt = f"""[INST] <<SYS>>
+{{You will be provided with customer service queries. The customer service query will be delimited with #### characters.
+Classify each query into a category.
+Provide just the category as your final output.
+Categories: Individual Stock Performance, Asset Allocation, Top Stocks, General Inquiry}}<</SYS>>
+{{####{user_prompt}####}}[/INST]"""
+    return prompt
