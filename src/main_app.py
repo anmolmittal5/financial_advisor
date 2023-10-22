@@ -159,7 +159,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
 
-def get_asset_allocations(n, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
+def get_asset_allocations(age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
     input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
         [ 0.58636271, -0.39537122,  0.42780971, -0.46944507],
         [-0.1100707 , -0.64677616,  0.57999954, -0.49210003],
@@ -168,6 +168,6 @@ def get_asset_allocations(n, age, risk_tolerance, investment_goal, income_level,
         [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
         [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
     
-    final_dict = allocations_personal_info(input_sequence, n, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation)
+    final_dict = allocations_personal_info(input_sequence,age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation)
 
     return final_dict

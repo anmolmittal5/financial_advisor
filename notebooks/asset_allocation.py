@@ -99,15 +99,15 @@ input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
 #     model_data = pickle.load(model_file)
 
 # 1. Load the model architecture (JSON) from the binary file
-with open('models/asset_allocation.bin', 'rb') as model_file:
+# with open('models/asset_allocation_new.bin', 'rb') as model_file:
+with open('models/asset_allocation_new.bin', 'rb') as model_file:
     model_data = pickle.load(model_file)
     model_json = model_data['model_json']
 
 # 2. Load the weights from the HDF5 file
 loaded_model = tf.keras.models.model_from_json(model_json)
-loaded_model.load_weights('models/asset_allocation_weights.h5')
-
-# Now you can use 'loaded_model' for predictions
+# loaded_model.load_weights('models/asset_allocation_weights_new.h5')
+loaded_model.load_weights('models/asset_allocation_weights_new.h5')
 
 def pred_allocations(model,input_seq, n):
     predicted_percentages = model.predict(input_sequence)
@@ -144,7 +144,7 @@ def get_percentage_allocations(model, input_seq, n):
 # pred_dict = get_percentage_allocations(loaded_model, input_sequence, 0)
 # print(f'Percentage of Stocks Allocation = {pred_dict["pred_stocks"]}\nPercentage of Bonds Allocation = {pred_dict["pred_bonds"]}\nPercentage of Cash Allocation = {pred_dict["pred_cash"]}')
 
-def allocations_personal_info(input_seq, n, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
+def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation, n=0):
     model = loaded_model
     pred_dict = get_percentage_allocations(model, input_seq, n)
 # print(f'Percentage of Stocks Allocation = {pred_dict["pred_stocks"]}\nPercentage of Bonds Allocation = {pred_dict["pred_bonds"]}\nPercentage of Cash Allocation = {pred_dict["pred_cash"]}')
@@ -247,10 +247,23 @@ def allocations_personal_info(input_seq, n, age, risk_tolerance, investment_goal
 
     allocation_dict = {'Shares': shares_pre_calculated*100, 'Bonds':bonds_pre_calculated*100, 'Cash':cash_pre_calculated*100}
 
-    # print(f'Percentage of Stocks Allocation = {shares_pre_calculated*100}\nPercentage of Bonds Allocation = {bonds_pre_calculated*100}\nPercentage of Cash Allocation = {cash_pre_calculated*100}')
-    # print(shares_pre_calculated*100, bonds_pre_calculated*100, cash_pre_calculated*100)
     return allocation_dict
 
-# final_dict = allocations_personal_info(input_sequence, 5, 25, 'high', 'long-term', 'low', 'high', 'low', 'single_no_children')
+def get_asset_allocations(age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
+    input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
+        [ 0.58636271, -0.39537122,  0.42780971, -0.46944507],
+        [-0.1100707 , -0.64677616,  0.57999954, -0.49210003],
+        [-0.63707234,  2.43698303, -2.44224021,  2.44542922],
+        [-0.99474293, -0.35575759,  0.38393767, -0.42008887],
+        [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
+        [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
+    
+    final_dict = allocations_personal_info(input_sequence, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation)
+
+    return final_dict
+
+
+# fd = get_asset_allocations(25, 'high', 'long-term', 'low', 'high', 'low', 'single_no_children')
+# print(fd)
 
 
