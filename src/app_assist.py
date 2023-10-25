@@ -1,7 +1,6 @@
 from config.config_reader import ConfigReader
 from duckduckgo_search import DDGS
 from itertools import islice
-import pandas as pd
 import re
 
 def get_config_params(model='llama_2_7b_chat_quantized'):

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 import os
+
 sys.path.insert(0, os.getcwd())
 import datetime
 import pickle
@@ -10,11 +11,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow import keras
+
 # # from tensorflow.keras import regularizers
 # from tensorflow.keras.models import Sequential
 # from tensorflow.keras.layers import LSTM, Dense
 # from tensorflow.keras.optimizers import Adam
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 '''
 stocks = pd.read_csv('C:/Users/kaush/Documents/CDS/sp500_returns_with_dates.csv')
@@ -87,13 +89,13 @@ input_sequence = input_sequence.reshape(1, sequence_length, input_sequence.shape
 
 '''
 
-input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
-        [ 0.58636271, -0.39537122,  0.42780971, -0.46944507],
-        [-0.1100707 , -0.64677616,  0.57999954, -0.49210003],
-        [-0.63707234,  2.43698303, -2.44224021,  2.44542922],
-        [-0.99474293, -0.35575759,  0.38393767, -0.42008887],
-        [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
-        [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
+input_sequence = [[[-1.23548854, -0.34773504, 0.37016103, -0.3988336],
+                   [0.58636271, -0.39537122, 0.42780971, -0.46944507],
+                   [-0.1100707, -0.64677616, 0.57999954, -0.49210003],
+                   [-0.63707234, 2.43698303, -2.44224021, 2.44542922],
+                   [-0.99474293, -0.35575759, 0.38393767, -0.42008887],
+                   [1.85269229, -0.34842693, 0.34988244, -0.35125468],
+                   [0.53831951, -0.34291609, 0.33044981, -0.31370698]]]
 
 # with open('models/asset_allocation.bin', 'rb') as model_file:
 #     model_data = pickle.load(model_file)
@@ -109,9 +111,11 @@ loaded_model = tf.keras.models.model_from_json(model_json)
 # loaded_model.load_weights('models/asset_allocation_weights_new.h5')
 loaded_model.load_weights('models/asset_allocation_weights_new.h5')
 
-def pred_allocations(model,input_seq, n):
+
+def pred_allocations(model, input_seq, n):
     predicted_percentages = model.predict(input_sequence)
     return predicted_percentages
+
 
 def get_percentage_allocations(model, input_seq, n):
     predicted_percentages = pred_allocations(model, input_seq, n)
@@ -121,33 +125,34 @@ def get_percentage_allocations(model, input_seq, n):
     pred_dict['pred_stocks'] = predicted_percentages[0][n][0]
     pred_dict['pred_bonds'] = predicted_percentages[0][n][1]
     pred_dict['pred_cash'] = predicted_percentages[0][n][2]
-    if total>0:
+    if total > 0:
         for key in pred_dict.keys():
-            if pred_dict[key]>0:
+            if pred_dict[key] > 0:
                 new_total += pred_dict[key]
             else:
                 pred_dict[key] = 0
     else:
         for key in pred_dict.keys():
-            if pred_dict[key]<0:
+            if pred_dict[key] < 0:
                 new_total += pred_dict[key]
             else:
                 pred_dict[key] = 0
 
-    pred_dict["pred_stocks"] = pred_dict["pred_stocks"]*100/new_total
-    pred_dict["pred_bonds"] = pred_dict["pred_bonds"]*100/new_total
-    pred_dict["pred_cash"] = pred_dict["pred_cash"]*100/new_total
+    pred_dict["pred_stocks"] = pred_dict["pred_stocks"] * 100 / new_total
+    pred_dict["pred_bonds"] = pred_dict["pred_bonds"] * 100 / new_total
+    pred_dict["pred_cash"] = pred_dict["pred_cash"] * 100 / new_total
 
     return pred_dict
-    
+
 
 # pred_dict = get_percentage_allocations(loaded_model, input_sequence, 0)
 # print(f'Percentage of Stocks Allocation = {pred_dict["pred_stocks"]}\nPercentage of Bonds Allocation = {pred_dict["pred_bonds"]}\nPercentage of Cash Allocation = {pred_dict["pred_cash"]}')
 
-def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation, n=0):
+def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, income_level, expenses_level,
+                              knowledge_experience, family_situation, n=0):
     model = loaded_model
     pred_dict = get_percentage_allocations(model, input_seq, n)
-# print(f'Percentage of Stocks Allocation = {pred_dict["pred_stocks"]}\nPercentage of Bonds Allocation = {pred_dict["pred_bonds"]}\nPercentage of Cash Allocation = {pred_dict["pred_cash"]}')
+    # print(f'Percentage of Stocks Allocation = {pred_dict["pred_stocks"]}\nPercentage of Bonds Allocation = {pred_dict["pred_bonds"]}\nPercentage of Cash Allocation = {pred_dict["pred_cash"]}')
     shares_pre_calculated = pred_dict['pred_stocks']
     bonds_pre_calculated = pred_dict['pred_bonds']
     cash_pre_calculated = pred_dict['pred_cash']
@@ -225,7 +230,6 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_ke
     cash_pre_calculated *= cash_allocation_ke
 
-
     if family_situation == 'single_no_children':
         shares_allocation_fs = 0.6
         bonds_allocation_fs = 0.3
@@ -245,23 +249,26 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated /= total_allocation
     cash_pre_calculated /= total_allocation
 
-    allocation_dict = {'Shares': shares_pre_calculated*100, 'Bonds':bonds_pre_calculated*100, 'Cash':cash_pre_calculated*100}
+    allocation_dict = {'Shares': shares_pre_calculated * 100, 'Bonds': bonds_pre_calculated * 100,
+                       'Cash': cash_pre_calculated * 100}
 
     return allocation_dict
 
-def get_asset_allocations(age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation):
-    input_sequence = [[[-1.23548854, -0.34773504,  0.37016103, -0.3988336 ],
-        [ 0.58636271, -0.39537122,  0.42780971, -0.46944507],
-        [-0.1100707 , -0.64677616,  0.57999954, -0.49210003],
-        [-0.63707234,  2.43698303, -2.44224021,  2.44542922],
-        [-0.99474293, -0.35575759,  0.38393767, -0.42008887],
-        [ 1.85269229, -0.34842693,  0.34988244, -0.35125468],
-        [ 0.53831951, -0.34291609,  0.33044981, -0.31370698]]]
-    
-    final_dict = allocations_personal_info(input_sequence, age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience, family_situation)
+
+def get_asset_allocations(age, risk_tolerance, investment_goal, income_level, expenses_level, knowledge_experience,
+                          family_situation):
+    input_sequence = [[[-1.23548854, -0.34773504, 0.37016103, -0.3988336],
+                       [0.58636271, -0.39537122, 0.42780971, -0.46944507],
+                       [-0.1100707, -0.64677616, 0.57999954, -0.49210003],
+                       [-0.63707234, 2.43698303, -2.44224021, 2.44542922],
+                       [-0.99474293, -0.35575759, 0.38393767, -0.42008887],
+                       [1.85269229, -0.34842693, 0.34988244, -0.35125468],
+                       [0.53831951, -0.34291609, 0.33044981, -0.31370698]]]
+
+    final_dict = allocations_personal_info(input_sequence, age, risk_tolerance, investment_goal, income_level,
+                                           expenses_level, knowledge_experience, family_situation)
 
     return final_dict
-
 
 # fd = get_asset_allocations(25, 'high', 'long-term', 'low', 'high', 'low', 'single_no_children')
 # print(fd)

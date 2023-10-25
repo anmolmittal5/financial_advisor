@@ -3,11 +3,11 @@ import streamlit as st
 import os
 import sys
 import re
-import torch
+# import torch
 import tensorflow
 sys.path.insert(0, os.getcwd())
-from ctransformers import AutoModelForCausalLM, AutoConfig
 import transformers
+from transformers import AutoModelForCausalLM
 from llama_cpp import Llama
 from app_assist import get_config_params, latest_search_results, split_data
 from notebooks.asset_allocation import pred_allocations, get_percentage_allocations, allocations_personal_info, get_asset_allocations
@@ -33,45 +33,15 @@ def ChatModel(temperature):
 def LlamaChatModel(temperature):
     params = get_config_params(model="llama_2_7b_chat")
     tokenizer = transformers.AutoTokenizer.from_pretrained(params['model_id'], trust_remote_code=True)
-    # bnb_config = transformers.BitsAndBytesConfig(
-    #     load_in_4bit=True,
-    #     bnb_4bit_quant_type='nf4',
-    #     bnb_4bit_use_double_quant=True,
-    #     bnb_4bit_compute_dtype=torch.float16
-    # )
-    llm = Llama(model_path="models/llama-2-7b-chat.ggmlv3.q2_K.bin", n_ctx=3000, n_gpu_layers=-1, n_batch=4)
+    llm = Llama(model_path="models/llama-2-7b-chat.ggmlv3.q2_K.bin", n_ctx=1000, n_gpu_layers=-1, n_batch=4)
     return llm, tokenizer
-#     model = transformers.AutoModelForCausalLM.from_pretrained(
-#         params['model_id'],
-#         trust_remote_code=True,
-#         quantization_config=bnb_config,
-#         device_map="auto",
-#         use_auth_token=params['auth_token']
-#     )
-#     model.eval()
-#     generator = transformers.pipeline(
-#         model=model,
-#         tokenizer=tokenizer,
-#         task=params['task'],
-#         temperature=temperature,
-#         max_new_tokens=int(params['max_length']),
-#         top_p=top_p,
-#         repetition_penalty=float(params['repetition_penalty'])
-#     )
-#     return generator
 
-# def run_llama(text, llama_chat_model, llama_tokenizer=None, temperature=0.1, max_tokens=-1, cutoff=3500):
-#     final_response = []
-#     if not llama_tokenizer:
-#         chunks = split_data(text, llama_tokenizer)
-#     else:
-#         chunks = [text]
-#     for chunk in chunks:
-#         final_response.append()
-#
-#
-
-
+@st.cache_resource()
+def FinanceLlamaChatModel(temperature):
+    params = get_config_params(model="finance_llama_chat")
+    tokenizer = transformers.AutoTokenizer.from_pretrained(params['model_id'], trust_remote_code=True)
+    llm = AutoModelForCausalLM.from_pretrained(params['model_id'], temperature=temperature)
+    return llm, tokenizer
 
 with st.sidebar:
     st.title('📈💲💬 AI Financial Chatbot')
@@ -80,6 +50,7 @@ with st.sidebar:
     temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=1.0, value=0.1, step=0.01)
     # chat_model = ChatModel(temperature)
     llama_chat_model, llama_tokenizer = LlamaChatModel(temperature)
+    # llama_chat_model, llma_tokenizer = FinanceLlamaChatModel(temperature)
 
     user_age = st.sidebar.slider('Age', min_value=18, max_value=100, value=25, step=1)
     user_knowledge_exp = st.sidebar.radio('Knowledge Experience', ['High', 'Low'])

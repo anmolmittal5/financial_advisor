@@ -13,10 +13,6 @@ from langchain import PromptTemplate, LLMChain
 from config.config_reader import ConfigReader
 import time
 
-
-class LLM_WRAPPER()
-
-
 class HF_LLM_WRAPPER(LLM):
     endpoint_name : str = ""
     MAX_TRY: int = 3
