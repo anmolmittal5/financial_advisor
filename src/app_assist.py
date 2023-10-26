@@ -63,7 +63,7 @@ def split_data(main_string, llama_tokenizer, cutoff=3500):
 
 def TopN(n):
     
-    rs_df = pd.read_csv(r'C://Users/Mahalakshmi/Downloads/Returns.csv')
+    rs_df = pd.read_csv(r'Returns.csv')
     rs_df = rs_df[rs_df.RS_Rating >= rs_df.RS_Rating.quantile(.70)]
     exportList = pd.DataFrame(columns=['Stock', "RS_Rating", "50 Day MA", "150 Day Ma", "200 Day MA", "52 Week Low", "52 week High"])
     
