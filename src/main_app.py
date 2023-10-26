@@ -10,7 +10,7 @@ import transformers
 from transformers import AutoModelForCausalLM
 from llama_cpp import Llama
 from app_assist import get_config_params, latest_search_results, split_data
-from notebooks.asset_allocation import pred_allocations, get_percentage_allocations, allocations_personal_info, get_asset_allocations
+from src.asset_allocation import get_asset_allocations
 from src.prompts import get_input_category_prompt, get_news_summary_prompt, asset_allocation_prompt
 
 creds = get_config_params("credentials")
