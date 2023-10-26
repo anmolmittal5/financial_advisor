@@ -89,13 +89,15 @@ input_sequence = input_sequence.reshape(1, sequence_length, input_sequence.shape
 
 '''
 
-input_sequence = [[[-1.23548854, -0.34773504, 0.37016103, -0.3988336],
-                   [0.58636271, -0.39537122, 0.42780971, -0.46944507],
-                   [-0.1100707, -0.64677616, 0.57999954, -0.49210003],
-                   [-0.63707234, 2.43698303, -2.44224021, 2.44542922],
-                   [-0.99474293, -0.35575759, 0.38393767, -0.42008887],
-                   [1.85269229, -0.34842693, 0.34988244, -0.35125468],
-                   [0.53831951, -0.34291609, 0.33044981, -0.31370698]]]
+# input_sequence = [[[-1.23548854, -0.34773504, 0.37016103, -0.3988336],
+#                    [0.58636271, -0.39537122, 0.42780971, -0.46944507],
+#                    [-0.1100707, -0.64677616, 0.57999954, -0.49210003],
+#                    [-0.63707234, 2.43698303, -2.44224021, 2.44542922],
+#                    [-0.99474293, -0.35575759, 0.38393767, -0.42008887],
+#                    [1.85269229, -0.34842693, 0.34988244, -0.35125468],
+#                    [0.53831951, -0.34291609, 0.33044981, -0.31370698]]]
+
+
 
 # with open('models/asset_allocation.bin', 'rb') as model_file:
 #     model_data = pickle.load(model_file)
@@ -112,13 +114,13 @@ loaded_model = tf.keras.models.model_from_json(model_json)
 loaded_model.load_weights('models/asset_allocation_weights_new.h5')
 
 
-def pred_allocations(model, input_seq, n):
-    predicted_percentages = model.predict(input_sequence)
+def pred_allocations(model, input_seq):
+    predicted_percentages = model.predict(input_seq)
     return predicted_percentages
 
 
 def get_percentage_allocations(model, input_seq, n):
-    predicted_percentages = pred_allocations(model, input_seq, n)
+    predicted_percentages = pred_allocations(model, input_seq)
     total = sum(predicted_percentages[0][n])
     new_total = 0
     pred_dict = {}
@@ -156,6 +158,15 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     shares_pre_calculated = pred_dict['pred_stocks']
     bonds_pre_calculated = pred_dict['pred_bonds']
     cash_pre_calculated = pred_dict['pred_cash']
+
+    shares_allocation_age, bonds_allocation_age, cash_allocation_age = 0, 0, 0
+    shares_allocation_rt, bonds_allocation_rt, cash_allocation_rt = 0, 0, 0
+    shares_allocation_ig, bonds_allocation_ig, cash_allocation_ig = 0, 0, 0
+    shares_allocation_il, bonds_allocation_il, cash_allocation_il = 0, 0, 0
+    shares_allocation_ke, bonds_allocation_ke, cash_allocation_ke = 0, 0, 0
+    shares_allocation_fs, bonds_allocation_fs, cash_allocation_fs = 0, 0, 0
+
+
     if age > 50:
         shares_allocation_age = 0.5
         bonds_allocation_age = 0.4
