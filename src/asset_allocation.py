@@ -185,11 +185,11 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_age
     cash_pre_calculated *= cash_allocation_age
 
-    if risk_tolerance == 'high':
+    if risk_tolerance == 'High':
         shares_allocation_rt = 0.7
         bonds_allocation_rt = 0.2
         cash_allocation_rt = 0.1
-    elif risk_tolerance == 'low':
+    elif risk_tolerance == 'Low':
         shares_allocation_rt = 0.4
         bonds_allocation_rt = 0.4
         cash_allocation_rt = 0.2
@@ -199,11 +199,11 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_rt
     cash_pre_calculated *= cash_allocation_rt
 
-    if investment_goal == 'short-term':
+    if investment_goal == 'Short-term':
         shares_allocation_ig = 0.3
         bonds_allocation_ig = 0.5
         cash_allocation_ig = 0.2
-    elif investment_goal == 'long-term':
+    elif investment_goal == 'Long-term':
         shares_allocation_ig = 0.7
         bonds_allocation_ig = 0.2
         cash_allocation_ig = 0.1
@@ -213,11 +213,11 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_ig
     cash_pre_calculated *= cash_allocation_ig
 
-    if income_level == 'high' and expenses_level == 'low':
+    if income_level == 'High' and expenses_level == 'Low':
         shares_allocation_il = 0.6
         bonds_allocation_il = 0.3
         cash_allocation_il = 0.1
-    elif income_level == 'low' and expenses_level == 'high':
+    elif income_level == 'Low' and expenses_level == 'High':
         shares_allocation_il = 0.4
         bonds_allocation_il = 0.5
         cash_allocation_il = 0.1
@@ -227,11 +227,11 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_il
     cash_pre_calculated *= cash_allocation_il
 
-    if knowledge_experience == 'low':
+    if knowledge_experience == 'Low':
         shares_allocation_ke = 0.4
         bonds_allocation_ke = 0.4
         cash_allocation_ke = 0.2
-    elif knowledge_experience == 'high':
+    elif knowledge_experience == 'High':
         shares_allocation_ke = 0.6
         bonds_allocation_ke = 0.3
         cash_allocation_ke = 0.1
@@ -241,11 +241,11 @@ def allocations_personal_info(input_seq, age, risk_tolerance, investment_goal, i
     bonds_pre_calculated *= bonds_allocation_ke
     cash_pre_calculated *= cash_allocation_ke
 
-    if family_situation == 'single_no_children':
+    if family_situation == 'Single with no children':
         shares_allocation_fs = 0.6
         bonds_allocation_fs = 0.3
         cash_allocation_fs = 0.1
-    elif family_situation == 'married_young_children':
+    elif family_situation == 'Married with young children':
         shares_allocation_fs = 0.4
         bonds_allocation_fs = 0.5
         cash_allocation_fs = 0.1
@@ -281,7 +281,7 @@ def get_asset_allocations(age, risk_tolerance, investment_goal, income_level, ex
 
     return final_dict
 
-# fd = get_asset_allocations(25, 'high', 'long-term', 'low', 'high', 'low', 'single_no_children')
-# print(fd)
+fd = get_asset_allocations(25, 'High', 'Long-term', 'Low', 'High', 'Low', 'Single with no children')
+print(fd)
 
 
