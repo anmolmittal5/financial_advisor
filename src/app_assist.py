@@ -70,7 +70,7 @@ def TopN(n):
     rs_stocks = rs_df['Ticker']
     for stock in rs_stocks:
         try:
-            df = pd.read_csv(f'{stock}.csv', index_col=0)
+            df = pd.read_csv(f'data/{stock}.csv', index_col=0)
             sma = [50, 150, 200]
             for x in sma:
                 df["SMA_" + str(x)] = round(df['Adj Close'].rolling(window=x).mean(), 2)
