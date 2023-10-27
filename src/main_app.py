@@ -88,6 +88,7 @@ def generate_llama2_response(prompt_input):
         else:
             string_dialogue += "Assistant: " + dict_message["content"] + "\\n\\n"
     output = llama_chat_model(prompt=f"prompt {string_dialogue} {prompt_input} Assistant: ", temperature=temperature, max_tokens=-1)
+    output = output['choices'][0]['text']
     return output
 
 def get_input_category(prompt):
@@ -125,7 +126,8 @@ def get_asset_allocation(user_prompt, asset_dict=None):
         return generate_llama2_response(user_prompt)
 
 def get_top_n_stocks(user_prompt, top_stocks=None):
-    if top_stocks:
+    top_stocks = top_stocks.to_dict()
+    if len(top_stocks) > 0:
         instruction = top_stocks_prompt(user_prompt, top_stocks)
         output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1, top_p=0.1)
         output = output['choices'][0]['text']

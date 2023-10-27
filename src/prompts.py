@@ -27,7 +27,7 @@ Asset Dictionary: ####{asset_dict}####[/INST]"""
 
 def top_stocks_prompt(user_prompt, top_stocks):
     prompt = f"""[INST] <<SYS>>
-You are a financial advisor provided with a User Query delimited by triple backticks and a list of Top Stocks delimited by #### characters.
+You are a financial advisor provided with a User Query delimited by triple backticks and a dictionary of Top Stocks delimited by #### characters.
 Answer the User Query basis the provided Top Stocks list. Try to structure the answer in a natural language.<</SYS>>
 User Query: ```{user_prompt}```
 Top Stocks: ####{top_stocks}####[/INST]"""
