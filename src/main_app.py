@@ -9,9 +9,9 @@ sys.path.insert(0, os.getcwd())
 import transformers
 from transformers import AutoModelForCausalLM
 from llama_cpp import Llama
-from app_assist import get_config_params, latest_search_results, split_data
+from app_assist import get_config_params, latest_search_results, split_data, TopN, get_top_n_user_query
 from src.asset_allocation import get_asset_allocations
-from src.prompts import get_input_category_prompt, get_news_summary_prompt, asset_allocation_prompt
+from src.prompts import get_input_category_prompt, get_news_summary_prompt, asset_allocation_prompt, top_stocks_prompt
 
 creds = get_config_params("credentials")
 huggingface_hub.login(token=creds['auth_token'])
@@ -30,10 +30,10 @@ def ChatModel(temperature):
     )
 
 @st.cache_resource()
-def LlamaChatModel(temperature):
-    params = get_config_params(model="llama_2_7b_chat")
+def LlamaChatModel():
+    params = get_config_params(model="llama_2_7b_chat_quantized")
     tokenizer = transformers.AutoTokenizer.from_pretrained(params['model_id'], trust_remote_code=True)
-    llm = Llama(model_path="models/llama-2-7b-chat.ggmlv3.q2_K.bin", n_ctx=1000, n_gpu_layers=-1, n_batch=4)
+    llm = Llama(model_path=params['model_path'], n_ctx=2500, n_gpu_layers=-1, n_batch=4)
     return llm, tokenizer
 
 @st.cache_resource()
@@ -49,7 +49,7 @@ with st.sidebar:
     model_type = st.sidebar.selectbox('Model Name', ('4bit Quantized Llama', '8bit Quantized Llama', 'Finance-Llama'))
     temperature = st.sidebar.slider('temperature', min_value=0.01, max_value=1.0, value=0.1, step=0.01)
     # chat_model = ChatModel(temperature)
-    llama_chat_model, llama_tokenizer = LlamaChatModel(temperature)
+    llama_chat_model, llama_tokenizer = LlamaChatModel()
     # llama_chat_model, llma_tokenizer = FinanceLlamaChatModel(temperature)
 
     user_age = st.sidebar.slider('Age', min_value=18, max_value=100, value=25, step=1)
@@ -81,7 +81,7 @@ def clear_chat_history():
 st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 def generate_llama2_response(prompt_input):
-    string_dialogue = "You are an expert Financial Advisor. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
+    string_dialogue = "You are an expert Financial Advisor skilled at providing exceptional financial advice. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
     for dict_message in st.session_state.messages:
         if dict_message["role"] == "user":
             string_dialogue += "User: " + dict_message["content"] + "\\n\\n"
@@ -91,7 +91,6 @@ def generate_llama2_response(prompt_input):
     return output
 
 def get_input_category(prompt):
-    print(prompt)
     instruction = get_input_category_prompt(prompt)
     output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1)
     category_text = output['choices'][0]['text']
@@ -111,23 +110,28 @@ def get_news_summary(prompt, context):
     for context_chunk in context_chunks:
         instruction = get_news_summary_prompt(prompt, context_chunk)
         output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1, top_p=0.1)
-        print(output)
+        output = output['choices'][0]['text']
         resp_values.append(output)
     # output = chat_model(instruction)
     return resp_values[0]
 
-def get_asset_allocation(asset_dict=None):
-    if not asset_dict:
-        instruction = asset_allocation_prompt(asset_dict)
+def get_asset_allocation(user_prompt, asset_dict=None):
+    if asset_dict:
+        instruction = asset_allocation_prompt(user_prompt, asset_dict)
         output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1, top_p=0.1)
-        asset_text = output['choices'][0]['text']
-        asset_start = asset_text.find("Natural Language Output:")
-        if asset_start != -1:
-            asset_allocation = asset_text[asset_start + len("Category:"):].strip()
-            print("Asset Allocation:", asset_allocation)
-            return asset_allocation
+        output = output['choices'][0]['text']
+        return output
     else:
-        return generate_llama2_response(prompt)
+        return generate_llama2_response(user_prompt)
+
+def get_top_n_stocks(user_prompt, top_stocks=None):
+    if top_stocks:
+        instruction = top_stocks_prompt(user_prompt, top_stocks)
+        output = llama_chat_model(prompt=instruction, temperature=temperature, max_tokens=-1, top_p=0.1)
+        output = output['choices'][0]['text']
+        return output
+    else:
+        return generate_llama2_response(user_prompt)
 
 
 if prompt := st.chat_input():
@@ -137,6 +141,7 @@ if prompt := st.chat_input():
 
 # Generate a new response if last message is not from assistant
 if st.session_state.messages[-1]["role"] != "assistant":
+    print(prompt)
     with st.spinner("Processing..."):
         category = get_input_category(prompt)
     if category == 'Individual Stock Performance':
@@ -151,14 +156,28 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     placeholder.markdown(full_response)
                 placeholder.markdown(full_response)
     elif category == 'Asset Allocation':
-        asset_dict = get_asset_allocations(user_age, user_risk_tolerance, user_investment_goals, user_income, user_expenses, user_knowledge_exp, user_family_situation)
-        response = get_asset_allocation(asset_dict)
-        placeholder = st.empty()
-        full_response = ''
-        for item in response:
-            full_response += item
-            placeholder.markdown(full_response)
-        placeholder.markdown(full_response)
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                asset_dict = get_asset_allocations(user_age, user_risk_tolerance, user_investment_goals, user_income, user_expenses, user_knowledge_exp, user_family_situation)
+                response = get_asset_allocation(prompt, asset_dict)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response:
+                    full_response += item
+                    placeholder.markdown(full_response)
+                placeholder.markdown(full_response)
+    elif category == 'Top Stocks':
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                n = get_top_n_user_query(prompt)
+                top_stocks = TopN(n)
+                response = get_top_n_stocks(prompt, top_stocks)
+                placeholder = st.empty()
+                full_response = ''
+                for item in response:
+                    full_response += item
+                    placeholder.markdown(full_response)
+                placeholder.markdown(full_response)
     else:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
